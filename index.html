@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login & Stok Barang</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #bbdefb, #e3f2fd);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .login-container, .stok-container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 400px;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    .stok-container {
+      max-width: 1000px;
+      display: none;
+    }
+    h2 {
+      text-align: center;
+      color: #0d47a1;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #aaa;
+      outline: none;
+    }
+    input:focus {
+      border-color: #1976d2;
+      box-shadow: 0 0 5px rgba(33,150,243,0.4);
+    }
+    button {
+      width: 100%;
+      background: #1976d2;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #0d47a1;
+    }
+    .link {
+      text-align: center;
+      margin-top: 10px;
+    }
+    .link a {
+      color: #1976d2;
+      text-decoration: none;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #1565c0;
+      color: white;
+    }
+    tr:hover { background: #f1f8ff; }
+    .btn {
+      background: #1976d2;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .hapus-btn {
+      background: #e53935;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .logout-btn {
+      float: right;
+      background: #e53935;
+      margin-bottom: 10px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN FORM -->
+  <div class="login-container" id="loginPage">
+    <h2>🔐 Login Stok Barang</h2>
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button onclick="login()">Login</button>
+    <div class="link">Belum punya akun? <a href="#" onclick="showRegister()">Daftar</a></div>
+  </div>
+
+  <!-- REGISTER FORM -->
+  <div class="login-container" id="registerPage" style="display:none;">
+    <h2>📝 Daftar Akun Baru</h2>
+    <input type="text" id="newUsername" placeholder="Username baru" required>
+    <input type="password" id="newPassword" placeholder="Password baru" required>
+    <button onclick="register()">Daftar</button>
+    <div class="link">Sudah punya akun? <a href="#" onclick="showLogin()">Login</a></div>
+  </div>
+
+  <!-- STOK BARANG -->
+  <div class="stok-container" id="stokPage">
+    <h2>📦 Manajemen Stok Barang <button class="logout-btn" onclick="logout()">Logout</button></h2>
+    <table id="tabelStok">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Nama Barang</th>
+          <th>Stok Awal</th>
+          <th>Barang Masuk</th>
+          <th>Barang Keluar</th>
+          <th>Stok Saat Ini</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tbodyStok"></tbody>
+    </table>
+    <div style="text-align:center; margin-top:15px;">
+      <button class="btn" onclick="tambahBaris()">➕ Tambah Barang</button>
+      <button class="btn" style="background:#f44336;" onclick="resetData()">🗑️ Reset Semua</button>
+    </div>
+  </div>
+
+  <script>
+    // ====================== LOGIN SYSTEM ======================
+    function showRegister() {
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("registerPage").style.display = "block";
+    }
+
+    function showLogin() {
+      document.getElementById("registerPage").style.display = "none";
+      document.getElementById("loginPage").style.display = "block";
+    }
+
+    function register() {
+      const username = document.getElementById("newUsername").value.trim();
+      const password = document.getElementById("newPassword").value.trim();
+      if (!username || !password) {
+        alert("Isi semua kolom!");
+        return;
+      }
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      if (users.find(u => u.username === username)) {
+        alert("Username sudah digunakan!");
+        return;
+      }
+      users.push({ username, password });
+      localStorage.setItem("users", JSON.stringify(users));
+      alert("Akun berhasil dibuat! Silakan login.");
+      showLogin();
+    }
+
+    function login() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const found = users.find(u => u.username === username && u.password === password);
+      if (found) {
+        localStorage.setItem("loggedInUser", username);
+        loadStokPage();
+      } else {
+        alert("Username atau password salah!");
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("loggedInUser");
+      location.reload();
+    }
+
+    // ====================== STOK SYSTEM ======================
+    function ambilData() {
+      const username = localStorage.getItem("loggedInUser");
+      const data = localStorage.getItem("stokBarang_" + username);
+      return data ? JSON.parse(data) : [];
+    }
+
+    function simpanData() {
+      const username = localStorage.getItem("loggedInUser");
+      localStorage.setItem("stokBarang_" + username, JSON.stringify(dataBarang));
+    }
+
+    function renderTabel() {
+      const tbody = document.getElementById("tbodyStok");
+      tbody.innerHTML = "";
+      dataBarang.forEach((item, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td><input type="text" value="${item.nama}"></td>
+          <td><input type="number" value="${item.stokAwal}" min="0"></td>
+          <td><input type="number" value="${item.masuk}" min="0"></td>
+          <td><input type="number" value="${item.keluar}" min="0"></td>
+          <td class="hasil">${item.stokAwal + item.masuk - item.keluar}</td>
+          <td><button class="hapus-btn" onclick="hapusBaris(${index})">Hapus</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+      updateEventListeners();
+    }
+
+    function hitungSemua() {
+      const rows = document.querySelectorAll("#tbodyStok tr");
+      rows.forEach((row, index) => {
+        const stokAwal = parseInt(row.children[2].children[0].value) || 0;
+        const masuk = parseInt(row.children[3].children[0].value) || 0;
+        const keluar = parseInt(row.children[4].children[0].value) || 0;
+        const hasil = stokAwal + masuk - keluar;
+        row.querySelector(".hasil").innerText = hasil;
+        dataBarang[index] = {
+          nama: row.children[1].children[0].value,
+          stokAwal, masuk, keluar
+        };
+      });
+      simpanData();
+    }
+
+    function tambahBaris() {
+      dataBarang.push({ nama: "", stokAwal: 0, masuk: 0, keluar: 0 });
+      renderTabel();
+      simpanData();
+    }
+
+    function hapusBaris(index) {
+      if (confirm("Yakin ingin hapus barang ini?")) {
+        dataBarang.splice(index, 1);
+        renderTabel();
+        simpanData();
+      }
+    }
+
+    function resetData() {
+      if (confirm("Yakin ingin hapus SEMUA data stok akun ini?")) {
+        dataBarang = [];
+        simpanData();
+        renderTabel();
+      }
+    }
+
+    function updateEventListeners() {
+      document.querySelectorAll("input").forEach(input => {
+        input.removeEventListener("input", hitungSemua);
+        input.addEventListener("input", hitungSemua);
+      });
+    }
+
+    function loadStokPage() {
+      document.getElementById("loginPage").style.display = "none";
+      document.getElementById("registerPage").style.display = "none";
+      document.getElementById("stokPage").style.display = "block";
+      dataBarang = ambilData();
+      renderTabel();
+    }
+
+    // ====================== INIT ======================
+    let dataBarang = [];
+    if (localStorage.getItem("loggedInUser")) {
+      loadStokPage();
+    }
+  </script>
+</body>
+</html>
